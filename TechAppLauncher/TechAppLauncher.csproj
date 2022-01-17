@@ -1,0 +1,49 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ApplicationIcon>TechAppLauncher.ico</ApplicationIcon>
+    <AssemblyVersion>1.0.1.6</AssemblyVersion>
+    <NeutralLanguage>en</NeutralLanguage>
+    <Version>1.0.1.6</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Assets\database.png" />
+    <None Remove="Assets\error.png" />
+    <None Remove="Assets\info.png" />
+    <None Remove="Assets\lock.png" />
+    <None Remove="Assets\stop.png" />
+    <None Remove="Assets\success.png" />
+    <None Remove="Assets\warning.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="0.10.0" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.10.0" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="0.10.0" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="ReactiveUI" Version="13.3.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Update="Assets\TechAppLauncher.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </AvaloniaResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Views\AppGalleryView.axaml.cs">
+      <DependentUpon>AppGalleryView.axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Data\TestData.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TechAppLauncher.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

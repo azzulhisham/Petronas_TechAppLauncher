@@ -1,0 +1,51 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="250"
+        Width="400" Height="130"
+		
+		x:Class="TechAppLauncher.Views.MessageDialogView"
+		WindowStartupLocation="CenterOwner"
+	    CanResize="False"
+		ShowInTaskbar="False"
+		Background="LightSeaGreen"
+		FontFamily="Calibri"
+		FontSize="16"
+		
+        Icon="/Assets/TechAppLauncher.ico"
+        Title="TechAppLauncher"
+        >
+
+	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="10" />
+			<ColumnDefinition Width="100" />
+			<ColumnDefinition Width="*" />
+			<ColumnDefinition Width="10" />
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="10" />
+			<RowDefinition Height="*" />
+			<RowDefinition Height="50" />
+			<RowDefinition Height="10" />
+		</Grid.RowDefinitions>
+
+		<Panel Grid.Column="1" Grid.Row="1">
+			<Image Width="60" Stretch="Uniform" Source="{Binding IcoImg}" Margin="30 0 10 0" VerticalAlignment="Center"/>
+		</Panel>
+
+		<Panel Grid.Column="2" Grid.Row="1">
+			<TextBlock Text="{Binding MessageText}" Foreground="White" VerticalAlignment="Center" Margin="8 0" TextWrapping="Wrap"></TextBlock>
+		</Panel>
+		
+		<Panel Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2">
+			<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+				<Button Command="{Binding CloseWin}" IsVisible="{Binding !IsButtonYesNoVisible}" IsDefault="{Binding IsButton1Default}" Cursor="Hand" Content="Ok" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Width="70" Foreground="{Binding Button1ForeGround}" Background="{Binding Button1BackGround}" BorderThickness="{Binding Button1BorderThickness}" BorderBrush="{Binding Button1BorderBrush}" Margin="4 0" />
+				<Button Command="{Binding ButtonYes}" IsVisible="{Binding IsButtonYesNoVisible}" IsDefault="{Binding IsButton1Default}" Cursor="Hand" Content="Yes" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Width="70" Foreground="{Binding Button1ForeGround}" Background="{Binding Button1BackGround}" BorderThickness="{Binding Button1BorderThickness}" BorderBrush="{Binding Button1BorderBrush}" Margin="4 0" />
+				<Button Command="{Binding ButtonNo}" IsVisible="{Binding IsButtonYesNoVisible}" IsDefault="{Binding IsButton2Default}" Cursor="Hand" Content="No" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Width="70" Foreground="{Binding Button2ForeGround}" Background="{Binding Button2BackGround}" BorderThickness="{Binding Button2BorderThickness}" BorderBrush="{Binding Button2BorderBrush}" Margin="4 0" />
+			</StackPanel>
+		</Panel>
+	</Grid>
+	
+</Window>

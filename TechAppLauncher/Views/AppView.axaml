@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="TechAppLauncher.Views.AppView">
+
+	<Border Background="White" Margin="4" CornerRadius="10" Width="200">
+		<StackPanel>
+			<TextBlock Text="{Binding Title}" HorizontalAlignment="Center" Height="80" Margin="0,8,0,0" Foreground="#00a19c" FontWeight="ExtraBold" FontSize="22" TextWrapping="Wrap"/>
+			<Border CornerRadius="10" ClipToBounds="True" Margin="4">
+				<Panel Background="#00a19c">
+					<Image Width="200" Stretch="Uniform" Source="{Binding AppImg}" />
+					<Panel Height="200" IsVisible="{Binding AppImg, Converter={x:Static ObjectConverters.IsNull}}">
+						<PathIcon Height="75" Width="75" Data="{StaticResource app_generic_regular}" />
+					</Panel>
+				</Panel>
+			</Border>
+			<TextBlock Text="{Binding AppGroup}" HorizontalAlignment="Center" Foreground="#00a19c" Margin="0 0 0 8" FontSize="20" />
+			<TextBlock Text="{Binding Description}" HorizontalAlignment="Center" Foreground="#00a19c" Margin="8 8 8 8" Height="80" TextWrapping="Wrap"/>
+		</StackPanel>		
+	</Border>
+
+</UserControl>

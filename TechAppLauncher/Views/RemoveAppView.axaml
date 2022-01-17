@@ -1,0 +1,61 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="450"
+		
+		x:Class="TechAppLauncher.Views.RemoveAppView"
+		WindowStartupLocation="CenterOwner"
+	    CanResize="False"
+		ShowInTaskbar="False"
+		Background="LightSeaGreen"
+		FontFamily="Calibri"
+		FontSize="16"
+		
+        Icon="/Assets/TechAppLauncher.ico"
+        Title="TechAppLauncher"
+		
+		TransparencyLevelHint="AcrylicBlur"
+        ExtendClientAreaToDecorationsHint="true"
+        Width="400" Height="500"
+		>
+
+	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="10" />
+			<ColumnDefinition Width="100" />
+			<ColumnDefinition Width="*" />
+			<ColumnDefinition Width="10" />
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="10" />
+			<RowDefinition Height="*" />
+			<RowDefinition Height="50" />
+			<RowDefinition Height="10" />
+		</Grid.RowDefinitions>
+
+		<StackPanel Background="#00a19c" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2">
+			<TextBlock TextAlignment="Center" Foreground="White" Padding="0 8 0 0">Uninstall App.</TextBlock>
+			<TextBlock TextAlignment="Left" Foreground="White" Padding="10 16 0 0">Select an App from the list to uninstall...</TextBlock>
+
+			<ListBox Items="{Binding ItemsInSystem}" SelectedItem="{Binding SelectedItem}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="10 4" Foreground="White" Background="Teal">
+				<ListBox.ItemTemplate>
+					<DataTemplate>
+						<Border BorderBrush="Gray" BorderThickness="1" CornerRadius="3" Padding="4" Width="350">
+							<TextBlock Text="{Binding}"/>
+						</Border>
+					</DataTemplate>
+				</ListBox.ItemTemplate>				
+			</ListBox>
+		</StackPanel>
+
+		<Panel Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2">
+			<StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+				<Button Command="{Binding RemoveApp}" Content="Uninstall" Margin="16 0 0 0" Padding="12 8 12 8" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Foreground="Black" Background="White" BorderThickness="1" BorderBrush="Black" ToolTip.Tip="Select an item, then click here to start uninstall the app." />
+				<Button Command="{Binding CloseWin}" Content="Close" Margin="16 0 0 0" Padding="12 8 12 8" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Foreground="White" ToolTip.Tip="Click here to close the windows." />
+			</StackPanel>
+		</Panel>
+
+	</Grid>
+  
+</Window>

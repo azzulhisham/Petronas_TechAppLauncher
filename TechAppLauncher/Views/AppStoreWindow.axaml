@@ -1,0 +1,34 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="using:TechAppLauncher.Views"
+		mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="TechAppLauncher.Views.AppStoreWindow"
+		WindowStartupLocation="CenterOwner"
+
+        Title="AppStoreWindow"
+		
+		TransparencyLevelHint="AcrylicBlur"	
+		ExtendClientAreaToDecorationsHint="True">
+
+	<Panel>
+		<ExperimentalAcrylicBorder IsHitTestVisible="False">
+			<ExperimentalAcrylicBorder.Material>
+				<ExperimentalAcrylicMaterial
+                    BackgroundSource="Digger"
+                    TintColor="Black"
+                    TintOpacity="1"
+                    MaterialOpacity="0.65" />
+			</ExperimentalAcrylicBorder.Material>
+		</ExperimentalAcrylicBorder>
+
+		<StackPanel Background="#00a19c">
+			<TextBlock TextAlignment="Center" Foreground="White" Margin="0,8,0,0" FontSize="18">Petronas</TextBlock>
+			<TextBlock TextAlignment="Center" Foreground="White" FontSize="12" Text="{Binding AppTitleBar}"></TextBlock>
+		</StackPanel>
+		<Panel Margin="40">
+			<local:AppStoreView />
+		</Panel>
+	</Panel>
+</Window>

@@ -1,0 +1,209 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:TechAppLauncher.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
+		Width="800" Height="500"
+        x:Class="TechAppLauncher.Views.MainWindow"
+        Icon="/Assets/TechAppLauncher.ico"
+        Title="TechAppLauncher"
+		
+		WindowStartupLocation="CenterScreen"
+		TransparencyLevelHint="AcrylicBlur"
+        Background="Transparent"
+		
+		ExtendClientAreaToDecorationsHint="true">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+	<Grid>
+		<ExperimentalAcrylicBorder IsHitTestVisible="False">
+			<ExperimentalAcrylicBorder.Material>
+				<ExperimentalAcrylicMaterial
+					BackgroundSource="Digger"
+					TintColor="Black"
+					TintOpacity="0.1"
+					MaterialOpacity="0.65" />
+			</ExperimentalAcrylicBorder.Material>
+		</ExperimentalAcrylicBorder>
+
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="10" />
+			<ColumnDefinition Width="auto" />
+			<ColumnDefinition Width="auto" />
+			<ColumnDefinition Width="100" />
+			<ColumnDefinition Width="10" />
+			<ColumnDefinition Width="*" />
+			<ColumnDefinition Width="50" />
+			<ColumnDefinition Width="10" />
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="30" />
+			<RowDefinition Height="auto" />
+			<RowDefinition Height="auto" />
+			<RowDefinition Height="auto" />
+			<RowDefinition Height="auto" />
+			<RowDefinition Height="auto" />
+			<RowDefinition Height="auto" />
+			<RowDefinition Height="*" />
+			<RowDefinition Height="50" />
+			<RowDefinition Height="10" />
+		</Grid.RowDefinitions>
+
+		<StackPanel Background="#00a19c" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="5">
+			<TextBlock TextAlignment="Center" Foreground="White" FontSize="18" Padding="0 8 0 0">Petronas</TextBlock>
+			<TextBlock TextAlignment="Center" Foreground="White" FontSize="12" Padding="0 0 0 8" Text="{Binding AppTitleBar}"></TextBlock>
+		</StackPanel>
+
+		<Panel Background="#00a19c" Grid.Column="6" Grid.Row="1">
+			<Button Content="Select App." Command="{Binding SelectAppCommand}" HorizontalAlignment="Right" Margin="8 8" Foreground="White" ToolTip.Tip="Click here to select a Plugin.">
+				<PathIcon Data="{StaticResource app_store_regular}" />
+			</Button>
+		</Panel>
+
+		<Panel Background="#00a19c" Grid.Column="1" Grid.Row="8"  Grid.ColumnSpan="3">
+			<StackPanel  Orientation="Horizontal">
+				<Button Content="Uninstall App." Command="{Binding RemoveAppCommand}" IsEnabled="True" IsVisible="{Binding !AppInSystemEmpty}" Margin="57 0 0 0" Padding="20 5" Foreground="White" BorderThickness="1" ToolTip.Tip="Click here to Uninstall Plugin.">
+				</Button>			
+			</StackPanel>
+		</Panel>
+		
+		<Panel Background="#00a19c" Grid.Column="4" Grid.Row="8"  Grid.ColumnSpan="3" >
+			<StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+				<Button Content="Download" Click="OnDownloadAppClicked" IsEnabled="{Binding IsDownloadAble}" IsVisible="{Binding !CollectionEmpty}" Margin="4 0 20 0" Padding="20 5" Foreground="Black" BorderThickness="1" Background="White" BorderBrush="Black" ToolTip.Tip="Click here to download the Plugin.">
+				</Button>
+				
+				<Button Content="Install" Command="{Binding LaunchApp}" IsEnabled="{Binding IsLaunchAble}" IsVisible="{Binding !CollectionEmpty}" Margin="4 0 30 0" Padding="20 5" Foreground="Black" BorderThickness="1" Background="White" BorderBrush="Black" ToolTip.Tip="Click here to install the Plugin.">
+				</Button>
+
+				<Button Content="Select App." Command="{Binding SelectAppCommand}" IsVisible="{Binding !CollectionEmpty}" Margin="4 0" Foreground="White" BorderThickness="1" ToolTip.Tip="Click here to select a Plugin.">	
+				</Button>
+
+				<Button Content="Close" Command="{Binding CloseWin}" Margin="4 0 8 0" Foreground="White" BorderThickness="1" ToolTip.Tip="Click here to close this launcher.">
+				</Button>				
+			</StackPanel>	
+		</Panel>
+
+		<Panel Background="#00a19c" Grid.Column="1" Grid.Row="2"  Grid.ColumnSpan="6" Grid.RowSpan="6" IsVisible="{Binding CollectionEmpty}">
+			<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+				<Panel Width="400" IsVisible="{Binding !AppInSystemEmpty}" Margin="10 0 100 0">
+					<TextBlock TextAlignment="Left" Foreground="White" Padding="0 10 0 0">All Petrel Plugins available in the system...</TextBlock>
+
+					<ListBox Items="{Binding ItemsInSystem}" SelectedItem="{Binding SelectedItem}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="0 30 0 0" Foreground="White" Background="Teal">
+						<ListBox.ItemTemplate>
+							<DataTemplate>
+								<Border BorderBrush="Gray" BorderThickness="1" CornerRadius="3" Padding="4" Width="360" Margin="8 0">
+									<TextBlock Text="{Binding}"/>
+								</Border>
+							</DataTemplate>
+						</ListBox.ItemTemplate>
+					</ListBox>
+
+				</Panel>
+				<StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+					<TextBlock Text="Let's get started by selecting an app..." Foreground="White" TextAlignment="Center" />
+
+					<Button Content="Select App." Command="{Binding SelectAppCommand}" HorizontalAlignment="Center" Margin="0 8" Foreground="Black" BorderThickness="1" Background="White" BorderBrush="Black" ToolTip.Tip="Click here to select a Plugin.">
+					</Button>
+
+					<TextBlock Text="** Click the button below to start installation if you have the downloaded Plugin" TextAlignment="Center" Foreground="GreenYellow" Margin="0 20 0 0" TextWrapping="Wrap" />
+
+					<Button Content="Install App. From Downloaded File" IsEnabled="{Binding !IsBusy}" Click="OnInstallAppFromFileClicked" HorizontalAlignment="Center" Margin="0 8" Foreground="White" BorderThickness="1" ToolTip.Tip="Click here to start installation if downloaded Plugin is provided.">
+					</Button>
+				</StackPanel>				
+			</StackPanel>
+		</Panel>
+
+		<Panel Background="#00a19c" Grid.Column="1" Grid.Row="2"  Grid.ColumnSpan="2" Grid.RowSpan="6" IsVisible="{Binding !CollectionEmpty}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+			<ItemsControl Items="{Binding Apps}" IsVisible="{Binding !CollectionEmpty}" Background="#00a19c">
+				<ItemsControl.ItemsPanel>
+					<ItemsPanelTemplate>
+						<WrapPanel />
+					</ItemsPanelTemplate>
+				</ItemsControl.ItemsPanel>
+			</ItemsControl>
+		</Panel>
+
+		
+		<!--App UID-->
+		<Panel Background="#00a19c" Grid.Column="3" Grid.Row="2" HorizontalAlignment="Stretch" IsVisible="{Binding !CollectionEmpty}">
+			<TextBlock Text="App UID" Foreground="White" Padding="4" Margin="4 0 0 0"></TextBlock>
+		</Panel>
+
+		<Panel Background="#00a19c" Grid.Column="4" Grid.Row="2" IsVisible="{Binding !CollectionEmpty}">
+			<TextBlock Text=":" Foreground="White" Padding="4"></TextBlock>
+		</Panel>
+		
+		<Panel Background="#00a19c" Grid.Column="5" Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" IsVisible="{Binding !CollectionEmpty}">
+			<TextBlock Text="{Binding SelectedAppUID}" Foreground="White" Padding="4" TextWrapping="Wrap"></TextBlock>
+		</Panel>
+
+		<!--Title-->
+		<Panel Background="#00a19c" Grid.Column="3" Grid.Row="3" HorizontalAlignment="Stretch" IsVisible="{Binding !CollectionEmpty}">
+			<TextBlock Text="Title" Foreground="White" Padding="4" Margin="4 0 0 0"></TextBlock>
+		</Panel>
+
+		<Panel Background="#00a19c" Grid.Column="4" Grid.Row="3" IsVisible="{Binding !CollectionEmpty}">
+			<TextBlock Text=":" Foreground="White" Padding="4"></TextBlock>
+		</Panel>
+
+		<Panel Background="#00a19c" Grid.Column="5" Grid.Row="3" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" IsVisible="{Binding !CollectionEmpty}">
+			<TextBlock Text="{Binding SelectedAppTitle}" Foreground="White" Padding="4" TextWrapping="Wrap"></TextBlock>
+		</Panel>
+
+		<!--Version-->
+		<Panel Background="#00a19c" Grid.Column="3" Grid.Row="4" HorizontalAlignment="Stretch" IsVisible="{Binding !CollectionEmpty}">
+			<TextBlock Text="Version" Foreground="White" Padding="4" Margin="4 0 0 0"></TextBlock>
+		</Panel>
+
+		<Panel Background="#00a19c" Grid.Column="4" Grid.Row="4" IsVisible="{Binding !CollectionEmpty}">
+			<TextBlock Text=":" Foreground="White" Padding="4"></TextBlock>
+		</Panel>
+
+		<Panel Background="#00a19c" Grid.Column="5" Grid.Row="4" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" IsVisible="{Binding !CollectionEmpty}">
+			<TextBlock Text="{Binding SelectedAppVersion}" Foreground="White" Padding="4" TextWrapping="Wrap"></TextBlock>
+		</Panel>
+
+		<!--Description-->
+		<Panel Background="#00a19c" Grid.Column="3" Grid.Row="5" HorizontalAlignment="Stretch" IsVisible="{Binding !CollectionEmpty}">
+			<TextBlock Text="Description" Foreground="White" Padding="4" Margin="4 0 0 0"></TextBlock>
+		</Panel>
+
+		<Panel Background="#00a19c" Grid.Column="4" Grid.Row="5" IsVisible="{Binding !CollectionEmpty}">
+			<TextBlock Text=":" Foreground="White" Padding="4"></TextBlock>
+		</Panel>
+
+		<Panel Background="#00a19c" Grid.Column="5" Grid.Row="5" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" IsVisible="{Binding !CollectionEmpty}">
+			<TextBlock Text="{Binding SelectedAppDescription}" Foreground="White" Padding="4" TextWrapping="Wrap"></TextBlock>
+		</Panel>
+
+		<!--Ref. File-->
+		<Panel Background="#00a19c" Grid.Column="3" Grid.Row="6" HorizontalAlignment="Stretch" IsVisible="{Binding !CollectionEmpty}">
+			<TextBlock Text="Ref. File" Foreground="White" Padding="4" Margin="4 0 0 0"></TextBlock>
+		</Panel>
+
+		<Panel Background="#00a19c" Grid.Column="4" Grid.Row="6" IsVisible="{Binding !CollectionEmpty}">
+			<TextBlock Text=":" Foreground="White" Padding="4"></TextBlock>
+		</Panel>
+
+		<Panel Background="#00a19c" Grid.Column="5" Grid.Row="6" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" IsVisible="{Binding !CollectionEmpty}">
+			<TextBlock Text="{Binding SelectedAppRefFile}" Foreground="White" Padding="4" TextWrapping="Wrap"></TextBlock>
+		</Panel>
+
+		<!---->
+		<Panel Background="#00a19c" Grid.Column="3" Grid.Row="7"  Grid.ColumnSpan="4" IsVisible="{Binding !CollectionEmpty}">
+			<ListBox Items="{Binding Galleries}" Background="#333333" >
+				<ListBox.ItemsPanel>
+					<ItemsPanelTemplate>
+						<WrapPanel />
+					</ItemsPanelTemplate>
+				</ListBox.ItemsPanel>
+			</ListBox>
+			<ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" VerticalAlignment="Top" />
+
+		</Panel>
+	</Grid>
+</Window>

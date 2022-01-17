@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="350"
+             x:Class="TechAppLauncher.Views.AppGalleryView">
+
+	<Border CornerRadius="10" ClipToBounds="True" Margin="4">
+		<Panel Background="#00a19c">
+			<Image Width="350" Stretch="Uniform" Source="{Binding AppImg}" />
+			<Panel Height="350" IsVisible="{Binding AppImg, Converter={x:Static ObjectConverters.IsNull}}">
+				<PathIcon Height="75" Width="75" Data="{StaticResource app_generic_regular}" />
+			</Panel>
+		</Panel>
+	</Border>	
+</UserControl>

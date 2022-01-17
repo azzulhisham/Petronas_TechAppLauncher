@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="TechAppLauncher.Views.AppStoreView">
+
+	<DockPanel>
+		<StackPanel DockPanel.Dock="Top" Margin="0 10 0 0">
+			<TextBox Text="{Binding SearchText}" IsEnabled="{Binding IsSearchAble}" Watermark="Search for App...." ToolTip.Tip="Entar text to start searching..."/>
+			<ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
+		</StackPanel>
+		
+		<StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Center">
+			<Button Command="{Binding GetAppSelectCommand}" x:Name="AppSelectCommandButton" IsEnabled="{Binding IsLaunchAble}" Content="Install Selected App."  Foreground="Black" BorderThickness="1" Background="White" BorderBrush="Black" ToolTip.Tip="Click here to select the selected Plugin." Margin="10 0" Padding="20 6"/>
+			<Button Command="{Binding GetAppSelectCommandClose}"  Content="Close" Foreground="White" BorderThickness="1" ToolTip.Tip="Click here to close the dialog box and skip selection."/>
+		</StackPanel>
+		
+		<ListBox Items="{Binding SelectedResults}" DoubleTapped="OnAppSelectionDoubleTapped" SelectedItem="{Binding SelectedApp}" Background="#333333" Margin="0 20" ToolTip.Tip="Select an available App. by click on the card.">
+			<ListBox.ItemsPanel>
+				<ItemsPanelTemplate>
+					<WrapPanel />
+				</ItemsPanelTemplate>
+			</ListBox.ItemsPanel>
+		</ListBox>
+	</DockPanel>
+</UserControl>
