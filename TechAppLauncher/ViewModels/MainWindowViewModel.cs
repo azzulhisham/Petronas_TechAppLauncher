@@ -289,6 +289,13 @@ namespace TechAppLauncher.ViewModels
 
                                 isLaunchAble = true;
                             }
+                            else
+                            {
+                                if (_selectedAppType.ToLower() == "stand alone")
+                                {
+                                    isLaunchAble = true;
+                                }
+                            }
                         }
                     }
 
