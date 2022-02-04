@@ -54,8 +54,6 @@ namespace TechAppLauncher.Services
 
             request.Headers.Accept.Clear();
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            //request.Content = new StringContent("", Encoding.UTF8, "application/json");
-
 
             s_httpClient = new HttpClient(_handler);
             s_httpClient.DefaultRequestHeaders.Accept.Clear();
@@ -64,9 +62,6 @@ namespace TechAppLauncher.Services
             var response = await s_httpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead);
             //var content = await response.Content.ReadFromJsonAsync(typeof(Models.AppDetail));
             var content = await response.Content.ReadAsStringAsync();
-
-            //content = System.IO.File.ReadAllText(@"Data\TestData.txt", Encoding.ASCII);
-            //var query = JsonConvert.DeserializeObject<AppDetail>(content);
 
             Serializer serializer = new Serializer();
             //var feeds = serializer.DeserializeFeed(content);

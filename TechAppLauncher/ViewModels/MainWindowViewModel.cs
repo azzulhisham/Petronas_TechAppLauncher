@@ -282,7 +282,8 @@ namespace TechAppLauncher.ViewModels
                                     }
                                 }
 
-                                if (_selectedAppType.ToLower() == "plugin")
+                                if (_selectedAppType.ToLower() == "plugin" ||
+                                    _selectedAppType.ToLower() == "dsg")
                                 {
                                     this.IsDownloadAble = true;
                                 }
@@ -350,6 +351,11 @@ namespace TechAppLauncher.ViewModels
                     await LaunchApplication();
                 }
 
+                if (_selectedAppType.ToLower() == "dsg")
+                {
+                    await LaunchEclipseApp();
+                }
+
                 if (_selectedAppType.ToLower() == "stand alone")
                 {
                     await LaunchAgent();
@@ -390,6 +396,100 @@ namespace TechAppLauncher.ViewModels
             await ShowMsgDialog.Handle(messageBoxDialog);
         }
 
+        public async Task LaunchEclipseApp(string filePath = "")
+        {
+            this.IsLaunchAble = false;
+            this.IsBusy = true;
+
+            string messageBoxText = "";
+            string targetPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TechAppLauncher");
+
+            if (!Directory.Exists(targetPath))
+            {
+                Directory.CreateDirectory(targetPath);
+            }
+
+
+            //file attached option
+            if (!string.IsNullOrEmpty(filePath))
+            {
+                this._refFileInfo = new RefFileInfo()
+                {
+                    FileName = Path.GetFileName(filePath)
+                };
+            }
+
+
+            //download the file
+            string zipFilePath = Path.Combine(targetPath, this._refFileInfo.FileName);
+            string workingFolder = zipFilePath.Replace(".zip", "");
+
+            //ensure existing file is remove
+            if (Directory.Exists(workingFolder))
+            {
+                Directory.Delete(workingFolder, true);
+            }
+
+            if (!Directory.Exists(workingFolder))
+            {
+                Directory.CreateDirectory(workingFolder);
+            }
+
+            if (string.IsNullOrEmpty(filePath))
+            {
+                await _techAppStoreService.DownloadFileAsync(this._refFileInfo, workingFolder);
+            }
+
+            this.IsLaunchAble = false;
+
+            var appDistRefDet = await _techAppStoreService.GetAppDistributionReferenceDetailByAppUID(_selectedAppUID);
+
+            if (appDistRefDet != null)
+            {
+                string agentApp = appDistRefDet.LinkID;
+                string processCmd = $"\"{agentApp}\" \"-application org.eclipse.equinox.p2.director -noSplash -repository jar:file:/{zipFilePath.Replace("\\", "/")}!/ -installIUs {this._refFileInfo.FileName.Replace(".zip", "")}\"";
+
+                try
+                {
+                    var process = System.Diagnostics.Process.Start(processCmd);
+                    //process.StartInfo.CreateNoWindow = true;
+                    await process.WaitForExitAsync(_cancellationToken);
+
+                    //await Task.Run(() => Sleep(5));
+
+                    //success
+                    SelectedAppRefFile = this._refFileInfo.FileName + $" - installed {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}";
+                    messageBoxText = $"Success! \r\nInstallation by {appDistRefDet.AgentName}. Please refer result windows.";
+
+                    var rec = _techAppStoreService.AddUserDownloadSession(new UserDownloadSession()
+                    {
+                        AppId = Convert.ToInt64(SelectedAppId),
+                        AppUID = SelectedAppUID,
+                        Title = SelectedAppTitle,
+                        UserName = Environment.UserName,
+                        Status = $"Installation by {appDistRefDet.AgentName}",
+                        Remark = SelectedAppType,
+                        InstallTimeStamp = DateTime.Now
+                    });
+                }
+                catch (Exception ex)
+                {
+                    string er = ex.Message;
+                    messageBoxText = $"Fail! \r\n{er}";
+                }
+            }
+            else
+            {
+                messageBoxText = "Fail! \r\nCouldn't found agent for this app.";
+            }
+
+            var messageBoxDialog = new MessageDialogViewModel(messageBoxText, (messageBoxText.ToLower().StartsWith("success") ? Enums.MessageBoxStyle.IconStyle.Success : Enums.MessageBoxStyle.IconStyle.Error));
+            await ShowMsgDialog.Handle(messageBoxDialog);
+
+            Apps.Clear();
+            this.IsBusy = false;
+        }
+
         public async Task LaunchAgent(string filePath = "")
         {
             this.IsLaunchAble = false;
@@ -428,6 +528,7 @@ namespace TechAppLauncher.ViewModels
                 catch (Exception ex)
                 {
                     string er = ex.Message;
+                    messageBoxText = $"Fail! \r\n{er}";
                 }
             }
             else
