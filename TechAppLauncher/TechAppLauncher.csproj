@@ -4,9 +4,9 @@
     <TargetFramework>net5.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ApplicationIcon>TechAppLauncher.ico</ApplicationIcon>
-    <AssemblyVersion>1.0.1.6</AssemblyVersion>
+    <AssemblyVersion>1.0.2.1</AssemblyVersion>
     <NeutralLanguage>en</NeutralLanguage>
-    <Version>1.0.1.6</Version>
+    <Version>1.0.2.1</Version>
   </PropertyGroup>
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
