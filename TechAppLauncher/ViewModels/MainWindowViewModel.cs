@@ -446,12 +446,17 @@ namespace TechAppLauncher.ViewModels
 
             if (appDistRefDet != null)
             {
-                string agentApp = appDistRefDet.LinkID;
-                string processCmd = $"\"{agentApp}\" \"-application org.eclipse.equinox.p2.director -noSplash -repository jar:file:/{zipFilePath.Replace("\\", "/")}!/ -installIUs {this._refFileInfo.FileName.Replace(".zip", "")}\"";
+                string agentApp = appDistRefDet.Description;
+                string processCmd = $"{agentApp}";
+
+                string argument = appDistRefDet.LinkID;
+
+                argument = argument.ToLower().Replace("{pluginfilepath}", zipFilePath.Replace("\\", "/"));
+                argument = argument.ToLower().Replace("{pluginui}", this._refFileInfo.FileName.Replace(".zip", ""));
 
                 try
                 {
-                    var process = System.Diagnostics.Process.Start(processCmd);
+                    var process = System.Diagnostics.Process.Start(processCmd,argument);
                     //process.StartInfo.CreateNoWindow = true;
                     await process.WaitForExitAsync(_cancellationToken);
 
