@@ -62,7 +62,7 @@ namespace TechAppLauncher.ViewModels
         private string _selectedAppTitle;
         private string _selectedAppVersion;
         private string _selectedAppDescription;
-        private string _selectedAppRefFile;
+        private string _selectedAppRefFile = "";
 
         private string _installFromFile;
         private string _downloadAppPath;
@@ -190,179 +190,213 @@ namespace TechAppLauncher.ViewModels
             await ShowMsgDialog.Handle(messageBoxDialog);
         }
 
-
-        public MainWindowViewModel()
+        public async Task BrowserFromApi(Version? assemblyVersion)
         {
-            var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version; 
-            AppTitleBar = $"Tech App Store - Ver. : {assemblyVersion.Major}.{assemblyVersion.MajorRevision}.{assemblyVersion.Build}.{assemblyVersion.Revision}";
+            var versionControl = await _techAppStoreService.GetLauncherVersion();
+
+            if (versionControl != null)
+            {
+                if ((assemblyVersion.Major <= versionControl.Major && assemblyVersion.MajorRevision < versionControl.MajorRevision) ||
+                    (assemblyVersion.Build <= versionControl.Minor && assemblyVersion.Revision < versionControl.MinorRevision))
+                {
+                    string messageBoxText = "There is a newer version available.\r\nKindly update your app before start.";
+                    var messageBoxDialog = new MessageDialogViewModel(messageBoxText, Enums.MessageBoxStyle.IconStyle.Warning);
+                    await ShowMsgDialog.Handle(messageBoxDialog);
+
+                    return;
+                }
+            }
+            else
+            {
+                string messageBoxText = "Your system is not in the correct network.\r\nThis app will not work correctly.";
+                var messageBoxDialog = new MessageDialogViewModel(messageBoxText, Enums.MessageBoxStyle.IconStyle.Warning);
+                await ShowMsgDialog.Handle(messageBoxDialog);
+            }
+
+            var store = new AppStoreViewModel();
+            var result = await ShowAppDialog.Handle(store);
+
+            if (_refFileDetails == null)
+            {
+                _refFileDetails = await _techAppStoreService.GetAllRefFilesAsync();
+            }
+
+            bool isLaunchAble = false;
+            this.IsLaunchAble = isLaunchAble;
+            this.IsDownloadAble = false;
+
+            Apps.Clear();
+
+            if (result != null && _refFileDetails != null)
+            {
+                Apps.Add(result);
+
+                var refFileDetailSelect = _refFileDetails.Where(n => n.AppUID == result.AppId.ToString()).FirstOrDefault();
+                var refFileUrl = refFileDetailSelect != null ? refFileDetailSelect.FileRefUrl : null;
+
+                SelectedAppTitle = result.Title;
+                SelectedAppUID = result.AppUID;
+                SelectedAppId = result.AppId.ToString();
+                SelectedAppType = result.AppType;
+                SelectedAppPlugin = result.PluginApp;
+                SelectedAppVersion = result.AppVersion != null ? result.AppVersion?.ToString() : "";
+                SelectedAppDescription = result.Description;
+                SelectedAppRefFile = "";
+
+                string info = "";
+                if (refFileUrl != null)
+                {
+                    _refFileInfo = await _techAppStoreService.GetFileAsync(refFileUrl);
+
+                    if (_refFileInfo != null)
+                    {
+                        refFileUrl = _refFileInfo.FileName;
+                        SelectedAppRefFile = refFileUrl;
+
+                        if (!string.IsNullOrEmpty(refFileUrl) && _refFileInfo.IsAvailable)
+                        {
+                            var userName = Environment.UserName;
+                            var userDownloadSessions = await _techAppStoreService.GetUserDownloadSessionByUser(userName.Replace(".", "_"));
+
+                            if (userDownloadSessions != null && userDownloadSessions.Count > 0)
+                            {
+                                if (userDownloadSessions.Any(n => n.AppUID.ToLower().Trim() == result.AppUID.ToLower().Trim()))
+                                {
+                                    var chkUserDownloadSessions = userDownloadSessions.Where(n => n.AppUID.ToLower().Trim() == result.AppUID.ToLower().Trim() && n.Status.Trim().ToLower() == "completed").ToList();
+
+                                    if (chkUserDownloadSessions != null && chkUserDownloadSessions.Count > 0)
+                                    {
+                                        info = $"The Plug-in has been installed on {userDownloadSessions[0].InstallTimeStamp.ToString("yyyy-MM-dd HH:mm:ss")}";
+                                    }
+                                }
+                            }
+
+                            if (_selectedAppType.ToLower() == "plugin" ||
+                                _selectedAppType.ToLower() == "dsg")
+                            {
+                                this.IsDownloadAble = true;
+                            }
+
+                            isLaunchAble = true;
+                        }
+                        else
+                        {
+                            if (_selectedAppType.ToLower() == "stand alone")
+                            {
+                                isLaunchAble = true;
+                            }
+                        }
+                    }
+                }
+
+                var appGalleries = await _techAppStoreService.GetAppDetailGalleries(result.AppUID);
+
+                if (appGalleries != null)
+                {
+                    this.Galleries.Clear();
+                    _cancellationTokenSource?.Cancel();
+                    _cancellationTokenSource = new CancellationTokenSource();
+
+                    for (int i = 0; i < appGalleries.Count; i++)
+                    {
+                        var vm = new AppGalleryViewModel(appGalleries[i]);
+                        Galleries.Add(vm);
+                    }
+
+                    if (!_cancellationTokenSource.IsCancellationRequested)
+                    {
+                        try
+                        {
+                            await LoadImage(_cancellationTokenSource.Token);
+                        }
+                        catch (Exception ex)
+                        {
+                            string er = ex.Message;
+                        }
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(info))
+                {
+                    var messageBoxDialog = new MessageDialogViewModel(info, Enums.MessageBoxStyle.IconStyle.Info);
+                    await ShowMsgDialog.Handle(messageBoxDialog);
+                }
+
+                this.IsLaunchAble = isLaunchAble;
+            }
+
+            LoadXmlContent();
+        }
+
+        public async Task LaunchingTask()
+        {
+            if (_selectedAppType.ToLower() == "plugin" && _selectedAppPlugin.ToLower().Contains("petrel"))
+            {
+                await LaunchApplication();
+            } 
+
+            if (_selectedAppType.ToLower() == "dsg")
+            {
+                await LaunchEclipseApp();
+            }
+
+            if (_selectedAppType.ToLower() == "stand alone")
+            {
+                await LaunchAgent();
+            }
+
+            LoadXmlContent();
+        }
+
+        void LoadFromArgs(string file)
+        {
+            using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            string info = "result";
+            try
+            {
+                var result = System.Text.Json.JsonSerializer.Deserialize<Models.App>(stream);
+                info = result?.AppUID ?? "No ID";
+                if (result is null)
+                    return;
+                Apps.Add(new AppViewModel(result));
+                SelectedAppTitle = result.Title;
+                SelectedAppUID = result.AppUID;
+                SelectedAppId = result.ID.ToString();
+                SelectedAppType = result.AppType;
+                SelectedAppPlugin = result.PluginApp;
+                SelectedAppVersion = result.AppVersion != null ? result.AppVersion?.ToString() : "";
+                SelectedAppDescription = result.ShortDescription;
+                SelectedAppRefFile = "";
+                this.IsDownloadAble = true;
+                this.IsLaunchAble = true;
+            }
+            catch (Exception e)
+            {
+                info = e.Message;
+            }
+            AppTitleBar = info;
+
+
+        }
+
+        public MainWindowViewModel(string[]? args)
+        {
+            var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
+            //AppTitleBar = $"Tech App Store - Ver. : {assemblyVersion.Major}.{assemblyVersion.MajorRevision}.{assemblyVersion.Build}.{assemblyVersion.Revision}";            
+            if (args is { Length: > 0 })
+            {
+                AppTitleBar = $"Parse Args: {args[0]}";
+                LoadFromArgs(args[0]);
+            }
 
             _techAppStoreService = new TechAppStoreService();
             ShowAppDialog = new Interaction<AppStoreViewModel, AppViewModel?>();
             ShowMsgDialog = new Interaction<MessageDialogViewModel, MessageDialogViewModel>();
             ShowRemoveAppDialog = new Interaction<RemoveAppViewModel, RemoveAppViewModel>();
 
-            SelectAppCommand = ReactiveCommand.CreateFromTask(async () =>
-            {
-                var versionControl = await _techAppStoreService.GetLauncherVersion();
-
-                if (versionControl != null)
-                {
-                    if ((assemblyVersion.Major <= versionControl.Major && assemblyVersion.MajorRevision < versionControl.MajorRevision) ||
-                        (assemblyVersion.Build <= versionControl.Minor && assemblyVersion.Revision < versionControl.MinorRevision))
-                    {
-                        string messageBoxText = "There is a newer version available.\r\nKindly update your app before start.";
-                        var messageBoxDialog = new MessageDialogViewModel(messageBoxText, Enums.MessageBoxStyle.IconStyle.Warning);
-                        await ShowMsgDialog.Handle(messageBoxDialog);
-
-                        return;
-                    }
-                }
-                else
-                {
-                    string messageBoxText = "Your system is not in the correct network.\r\nThis app will not work correctly.";
-                    var messageBoxDialog = new MessageDialogViewModel(messageBoxText, Enums.MessageBoxStyle.IconStyle.Warning);
-                    await ShowMsgDialog.Handle(messageBoxDialog);
-                }
-
-                var store = new AppStoreViewModel();
-                var result = await ShowAppDialog.Handle(store);
-
-                if (_refFileDetails == null)
-                {
-                    _refFileDetails = await _techAppStoreService.GetAllRefFilesAsync();
-                }
-
-                bool isLaunchAble = false;
-                this.IsLaunchAble = isLaunchAble;
-                this.IsDownloadAble = false;
-
-                Apps.Clear();
-
-                if (result != null && _refFileDetails != null)
-                {
-                    Apps.Add(result);
-
-                    var refFileDetailSelect = _refFileDetails.Where(n => n.AppUID == result.AppId.ToString()).FirstOrDefault();
-                    var refFileUrl = refFileDetailSelect != null ? refFileDetailSelect.FileRefUrl : null;
-
-                    SelectedAppTitle = result.Title;
-                    SelectedAppUID = result.AppUID;
-                    SelectedAppId = result.AppId.ToString();
-                    SelectedAppType = result.AppType;
-                    SelectedAppPlugin = result.PluginApp;
-                    SelectedAppVersion = result.AppVersion != null ? result.AppVersion?.ToString() : "";
-                    SelectedAppDescription = result.Description;
-                    SelectedAppRefFile = "";
-
-                    string info = "";
-                    if (refFileUrl != null)
-                    {
-                        _refFileInfo = await _techAppStoreService.GetFileAsync(refFileUrl);
-
-                        if (_refFileInfo != null)
-                        {
-                            refFileUrl = _refFileInfo.FileName;
-                            SelectedAppRefFile = refFileUrl;
-
-                            if (!string.IsNullOrEmpty(refFileUrl) && _refFileInfo.IsAvailable)
-                            {
-                                var userName = Environment.UserName;
-                                var userDownloadSessions = await _techAppStoreService.GetUserDownloadSessionByUser(userName.Replace(".", "_"));
-
-                                if (userDownloadSessions != null && userDownloadSessions.Count > 0)
-                                {
-                                    if (userDownloadSessions.Any(n => n.AppUID.ToLower().Trim() == result.AppUID.ToLower().Trim()))
-                                    {
-                                        var chkUserDownloadSessions = userDownloadSessions.Where(n => n.AppUID.ToLower().Trim() == result.AppUID.ToLower().Trim() && n.Status.Trim().ToLower() == "completed").ToList();
-
-                                        if (chkUserDownloadSessions != null && chkUserDownloadSessions.Count > 0)
-                                        {
-                                            info = $"The Plug-in has been installed on {userDownloadSessions[0].InstallTimeStamp.ToString("yyyy-MM-dd HH:mm:ss")}";
-                                        }
-                                    }
-                                }
-
-                                if (_selectedAppType.ToLower() == "plugin" ||
-                                    _selectedAppType.ToLower() == "dsg")
-                                {
-                                    this.IsDownloadAble = true;
-                                }
-
-                                isLaunchAble = true;
-                            }
-                            else
-                            {
-                                if (_selectedAppType.ToLower() == "stand alone")
-                                {
-                                    isLaunchAble = true;
-                                }
-                            }
-                        }
-                    }
-
-                    var appGalleries = await _techAppStoreService.GetAppDetailGalleries(result.AppUID);
-
-                    if (appGalleries != null)
-                    {
-                        this.Galleries.Clear();
-                        _cancellationTokenSource?.Cancel();
-                        _cancellationTokenSource = new CancellationTokenSource();
-
-                        for (int i = 0; i < appGalleries.Count; i++)
-                        {
-                            var vm = new AppGalleryViewModel(appGalleries[i]);
-                            Galleries.Add(vm);
-                        }
-
-                        if (!_cancellationTokenSource.IsCancellationRequested)
-                        {
-                            try
-                            {
-                                await LoadImage(_cancellationTokenSource.Token);
-                            }
-                            catch (Exception ex)
-                            {
-                                string er = ex.Message;
-                            }
-                        }
-                    }
-
-                    if (!string.IsNullOrEmpty(info))
-                    {
-                        var messageBoxDialog = new MessageDialogViewModel(info, Enums.MessageBoxStyle.IconStyle.Info);
-                        await ShowMsgDialog.Handle(messageBoxDialog);
-                    }
-
-                    this.IsLaunchAble = isLaunchAble;
-                }
-
-                LoadXmlContent();
-            });
-
-            CloseWin = ReactiveCommand.Create(() => 
-            {
-                return this;
-            });
-
-            LaunchApp = ReactiveCommand.CreateFromTask(async () =>
-            {
-                if (_selectedAppType.ToLower() == "plugin" && _selectedAppPlugin.ToLower().Contains("petrel"))
-                {
-                    await LaunchApplication();
-                }
-
-                if (_selectedAppType.ToLower() == "dsg")
-                {
-                    await LaunchEclipseApp();
-                }
-
-                if (_selectedAppType.ToLower() == "stand alone")
-                {
-                    await LaunchAgent();
-                }
-                
-                LoadXmlContent();
-            });
+            SelectAppCommand = ReactiveCommand.CreateFromTask(async () => await BrowserFromApi(assemblyVersion));
+            CloseWin = ReactiveCommand.Create(() => this);
+            LaunchApp = ReactiveCommand.CreateFromTask(LaunchingTask);
 
             RemoveAppCommand = ReactiveCommand.CreateFromTask(async () =>
             {

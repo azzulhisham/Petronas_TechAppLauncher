@@ -28,19 +28,14 @@ namespace TechAppLauncher.Services
 
         public TechAppStoreService()
         {
-            var LauncherConfig = GetLauncherConfiguration();
+            var cfg = GetLauncherConfiguration();
 
-            _handler = new HttpClientHandler()
+            _handler = new HttpClientHandler
             {
-                Credentials = new NetworkCredential(LauncherConfig.AppStoreServerUser, LauncherConfig.AppStoreServerPwd, LauncherConfig.AppStoreServerDomain)
+                Credentials = new NetworkCredential(cfg.AppStoreServerUser, cfg.AppStoreServerPwd, cfg.AppStoreServerDomain),
+                ClientCertificateOptions = ClientCertificateOption.Manual,
+                ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) => true
             };
-
-            _handler.ClientCertificateOptions = ClientCertificateOption.Manual;
-            _handler.ServerCertificateCustomValidationCallback =
-                (httpRequestMessage, cert, cetChain, policyErrors) =>
-                {
-                    return true;
-                };
         }
 
         public async Task<IList<Models.App>> GetAllAsync()
@@ -261,7 +256,7 @@ namespace TechAppLauncher.Services
                 RequestUri = new Uri(url),
                 Method = HttpMethod.Get,
             };
-            
+
             request.Headers.Accept.Clear();
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
@@ -353,7 +348,7 @@ namespace TechAppLauncher.Services
             s_httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             s_httpClient.Timeout = GetTimeOut(5);
 
-            LauncherConfig launcherConfig = null;
+            LauncherConfig launcherConfig = new();
 
             try
             {
