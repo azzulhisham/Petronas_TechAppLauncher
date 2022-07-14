@@ -196,8 +196,8 @@ namespace TechAppLauncher.ViewModels
 
             if (versionControl != null)
             {
-                if ((assemblyVersion.Major <= versionControl.Major && assemblyVersion.MajorRevision < versionControl.MajorRevision) ||
-                    (assemblyVersion.Build <= versionControl.Minor && assemblyVersion.Revision < versionControl.MinorRevision))
+                if ((assemblyVersion?.Major <= versionControl.Major && assemblyVersion.MajorRevision < versionControl.MajorRevision) ||
+                    (assemblyVersion?.Build <= versionControl.Minor && assemblyVersion.Revision < versionControl.MinorRevision))
                 {
                     string messageBoxText = "There is a newer version available.\r\nKindly update your app before start.";
                     var messageBoxDialog = new MessageDialogViewModel(messageBoxText, Enums.MessageBoxStyle.IconStyle.Warning);
@@ -239,7 +239,7 @@ namespace TechAppLauncher.ViewModels
                 SelectedAppId = result.AppId.ToString();
                 SelectedAppType = result.AppType;
                 SelectedAppPlugin = result.PluginApp;
-                SelectedAppVersion = result.AppVersion != null ? result.AppVersion?.ToString() : "";
+                SelectedAppVersion = result.AppVersion?.ToString() ?? "";
                 SelectedAppDescription = result.Description;
                 SelectedAppRefFile = "";
 
@@ -366,7 +366,7 @@ namespace TechAppLauncher.ViewModels
                 SelectedAppPlugin = result.PluginApp;
                 SelectedAppVersion = result.AppVersion != null ? result.AppVersion?.ToString() : "";
                 SelectedAppDescription = result.ShortDescription;
-                SelectedAppRefFile = "";
+                SelectedAppRefFile = result.InstallerUrl;
                 this.IsDownloadAble = true;
                 this.IsLaunchAble = true;
             }

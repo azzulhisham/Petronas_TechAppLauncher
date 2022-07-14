@@ -47,5 +47,6 @@ namespace TechAppLauncher.Models
         public string OData__UIVersionString { get; set; }
         public bool Attachments { get; set; }
         public string GUID { get; set; }
+        public string InstallerUrl { get; set; }
     }
 }

@@ -1,5 +1,6 @@
 using System.IO;
 using System.Reflection;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
@@ -9,6 +10,9 @@ var data = new
     AppType = "DSG",
     AppUID = "ENTDDSG2021",
     Title = "ENTD DSG",
+    ShortDescription = "Enhanced Network Turtoisity Detection for DSG",
+    AppVersion = 1.1,
+    InstallerUrl = "/file",
 };
 var text = System.Text.Json.JsonSerializer.Serialize(data);
 
@@ -19,7 +23,7 @@ app.MapGet("/", () =>
 
 app.MapGet("/install", () =>
 {
-    return Results.Content(text, "application/techapp");
+    return Results.File(Encoding.ASCII.GetBytes(text), "application/techapp", $"{data.AppUID}.techapp");
 });
 
 app.Run();
