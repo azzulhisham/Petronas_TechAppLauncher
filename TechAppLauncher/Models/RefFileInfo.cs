@@ -13,5 +13,6 @@ namespace TechAppLauncher.Models
         public string FileRelativeUrl { get; set; }
         public double FileSize { get; set; }
         public bool IsAvailable { get; set; }
+        public string FileUrl { get; set; }
     }
 }

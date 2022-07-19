@@ -410,14 +410,10 @@ namespace TechAppLauncher.Services
         {
             s_httpClient = new HttpClient(_handler);
             var pp = Path.Combine(targetPath, refFileInfo.FileName);
-
-            using (var s = await s_httpClient.GetStreamAsync(@"https://techupstream.petronas.com" + refFileInfo.FileRelativeUrl))
-            {
-                using (var fs = new FileStream(pp, FileMode.CreateNew))
-                {
-                    await s.CopyToAsync(fs);
-                }
-            }
+            refFileInfo.FileUrl ??= @"https://techupstream.petronas.com" + refFileInfo.FileRelativeUrl;
+            using var s = await s_httpClient.GetStreamAsync(refFileInfo.FileUrl);
+            using var fs = new FileStream(pp, FileMode.CreateNew);
+            await s.CopyToAsync(fs);
         }
 
         static TimeSpan GetTimeOut(int seconds)

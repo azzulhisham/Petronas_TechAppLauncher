@@ -20,6 +20,7 @@ using System.Reflection;
 using System.Timers;
 using Avalonia.Controls;
 using System.Xml;
+using TechAppLauncher.Models.xml.AppList;
 
 namespace TechAppLauncher.ViewModels
 {
@@ -216,23 +217,16 @@ namespace TechAppLauncher.ViewModels
             var store = new AppStoreViewModel();
             var result = await ShowAppDialog.Handle(store);
 
-            if (_refFileDetails == null)
-            {
-                _refFileDetails = await _techAppStoreService.GetAllRefFilesAsync();
-            }
+            _refFileDetails ??= await _techAppStoreService.GetAllRefFilesAsync();
 
-            bool isLaunchAble = false;
-            this.IsLaunchAble = isLaunchAble;
-            this.IsDownloadAble = false;
+            IsLaunchAble = false;
+            IsDownloadAble = false;
 
             Apps.Clear();
 
             if (result != null && _refFileDetails != null)
             {
                 Apps.Add(result);
-
-                var refFileDetailSelect = _refFileDetails.Where(n => n.AppUID == result.AppId.ToString()).FirstOrDefault();
-                var refFileUrl = refFileDetailSelect != null ? refFileDetailSelect.FileRefUrl : null;
 
                 SelectedAppTitle = result.Title;
                 SelectedAppUID = result.AppUID;
@@ -243,57 +237,11 @@ namespace TechAppLauncher.ViewModels
                 SelectedAppDescription = result.Description;
                 SelectedAppRefFile = "";
 
-                string info = "";
-                if (refFileUrl != null)
-                {
-                    _refFileInfo = await _techAppStoreService.GetFileAsync(refFileUrl);
-
-                    if (_refFileInfo != null)
-                    {
-                        refFileUrl = _refFileInfo.FileName;
-                        SelectedAppRefFile = refFileUrl;
-
-                        if (!string.IsNullOrEmpty(refFileUrl) && _refFileInfo.IsAvailable)
-                        {
-                            var userName = Environment.UserName;
-                            var userDownloadSessions = await _techAppStoreService.GetUserDownloadSessionByUser(userName.Replace(".", "_"));
-
-                            if (userDownloadSessions != null && userDownloadSessions.Count > 0)
-                            {
-                                if (userDownloadSessions.Any(n => n.AppUID.ToLower().Trim() == result.AppUID.ToLower().Trim()))
-                                {
-                                    var chkUserDownloadSessions = userDownloadSessions.Where(n => n.AppUID.ToLower().Trim() == result.AppUID.ToLower().Trim() && n.Status.Trim().ToLower() == "completed").ToList();
-
-                                    if (chkUserDownloadSessions != null && chkUserDownloadSessions.Count > 0)
-                                    {
-                                        info = $"The Plug-in has been installed on {userDownloadSessions[0].InstallTimeStamp.ToString("yyyy-MM-dd HH:mm:ss")}";
-                                    }
-                                }
-                            }
-
-                            if (_selectedAppType.ToLower() == "plugin" ||
-                                _selectedAppType.ToLower() == "dsg")
-                            {
-                                this.IsDownloadAble = true;
-                            }
-
-                            isLaunchAble = true;
-                        }
-                        else
-                        {
-                            if (_selectedAppType.ToLower() == "stand alone")
-                            {
-                                isLaunchAble = true;
-                            }
-                        }
-                    }
-                }
-
                 var appGalleries = await _techAppStoreService.GetAppDetailGalleries(result.AppUID);
 
                 if (appGalleries != null)
                 {
-                    this.Galleries.Clear();
+                    Galleries.Clear();
                     _cancellationTokenSource?.Cancel();
                     _cancellationTokenSource = new CancellationTokenSource();
 
@@ -316,13 +264,39 @@ namespace TechAppLauncher.ViewModels
                     }
                 }
 
+                string info = "";
+
+                var refFileUrl = _refFileDetails.Where(n => n.AppUID == result.AppId.ToString())
+                    .Select(s => s.FileRefUrl).FirstOrDefault();
+                if (refFileUrl != null)
+                {
+                    _refFileInfo = await _techAppStoreService.GetFileAsync(refFileUrl);
+                    if (_refFileInfo != null)
+                    {
+                        SelectedAppRefFile = _refFileInfo.FileName;
+                        if (_refFileInfo.IsAvailable)
+                        {
+                            var userName = Environment.UserName;
+                            var userDownloadSessions = await _techAppStoreService.GetUserDownloadSessionByUser(userName.Replace(".", "_"));
+                            var appUID = result.AppUID.ToLower().Trim();
+                            if (userDownloadSessions?.Where(n => n.AppUID.ToLower().Trim() == appUID && n.Status.Trim().ToLower() == "completed").Count() > 0)
+                                info = $"The Plug-in has been installed on {userDownloadSessions[0].InstallTimeStamp:yyyy-MM-dd HH:mm:ss}";
+                            IsDownloadAble = _selectedAppType.ToLower() is "plugin" or "dsg";
+                            IsLaunchAble = true;
+                        }
+                        else
+                        {
+                            IsLaunchAble = _selectedAppType.ToLower() == "stand alone";
+                        }
+                    }
+                }
+
                 if (!string.IsNullOrEmpty(info))
                 {
                     var messageBoxDialog = new MessageDialogViewModel(info, Enums.MessageBoxStyle.IconStyle.Info);
                     await ShowMsgDialog.Handle(messageBoxDialog);
                 }
 
-                this.IsLaunchAble = isLaunchAble;
             }
 
             LoadXmlContent();
@@ -348,7 +322,7 @@ namespace TechAppLauncher.ViewModels
             LoadXmlContent();
         }
 
-        void LoadFromArgs(string file)
+        async void LoadFromArgs(string file)
         {
             using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             string info = "result";
@@ -358,31 +332,68 @@ namespace TechAppLauncher.ViewModels
                 info = result?.AppUID ?? "No ID";
                 if (result is null)
                     return;
-                Apps.Add(new AppViewModel(result));
+                var app = new AppViewModel(result);
+                await app.LoadAppImage();
+                Apps.Add(app);
                 SelectedAppTitle = result.Title;
                 SelectedAppUID = result.AppUID;
                 SelectedAppId = result.ID.ToString();
                 SelectedAppType = result.AppType;
                 SelectedAppPlugin = result.PluginApp;
-                SelectedAppVersion = result.AppVersion != null ? result.AppVersion?.ToString() : "";
+                SelectedAppVersion = result.AppVersion?.ToString() ?? "";
                 SelectedAppDescription = result.ShortDescription;
                 SelectedAppRefFile = result.InstallerUrl;
-                this.IsDownloadAble = true;
-                this.IsLaunchAble = true;
+                IsDownloadAble = _selectedAppType.ToLower() is "plugin" or "dsg";
+                IsLaunchAble = true;
+
+                Galleries.Clear();
+                if (result.Galleries?.Count > 0)
+                {
+                    _cancellationTokenSource?.Cancel();
+                    _cancellationTokenSource = new CancellationTokenSource();
+                    for (int i = 0; i < result.Galleries.Count; i++)
+                    {
+                        var vm = new AppGalleryViewModel(result.Galleries[i]);
+                        Galleries.Add(vm);
+                    }
+
+                    if (!_cancellationTokenSource.IsCancellationRequested)
+                    {
+                        try
+                        {
+                            await LoadImage(_cancellationTokenSource.Token);
+                        }
+                        catch (Exception ex)
+                        {
+                            string er = ex.Message;
+                        }
+                    }
+                }
+
+
+                if (result.InstallerUrl is not null)
+                {
+                    _refFileInfo = new ()
+                    {
+                        FileName = result.InstallerUrl.Split("/")[^1],
+                        //FileSize = result.InstallerSize,
+                        FileUrl = result.InstallerUrl,
+                        Title = $"Installer for {SelectedAppTitle}",
+                        IsAvailable = true
+                    };
+                }
             }
             catch (Exception e)
             {
                 info = e.Message;
             }
             AppTitleBar = info;
-
-
         }
 
         public MainWindowViewModel(string[]? args)
         {
             var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
-            //AppTitleBar = $"Tech App Store - Ver. : {assemblyVersion.Major}.{assemblyVersion.MajorRevision}.{assemblyVersion.Build}.{assemblyVersion.Revision}";            
+            //AppTitleBar = $"Tech App Store - Ver. : {assemblyVersion.Major}.{assemblyVersion.MajorRevision}.{assemblyVersion.Build}.{assemblyVersion.Revision}";
             if (args is { Length: > 0 })
             {
                 AppTitleBar = $"Parse Args: {args[0]}";
@@ -394,7 +405,8 @@ namespace TechAppLauncher.ViewModels
             ShowMsgDialog = new Interaction<MessageDialogViewModel, MessageDialogViewModel>();
             ShowRemoveAppDialog = new Interaction<RemoveAppViewModel, RemoveAppViewModel>();
 
-            SelectAppCommand = ReactiveCommand.CreateFromTask(async () => await BrowserFromApi(assemblyVersion));
+            SelectAppCommand = ReactiveCommand.CreateFromTask(
+                async () => await BrowserFromApi(assemblyVersion));
             CloseWin = ReactiveCommand.Create(() => this);
             LaunchApp = ReactiveCommand.CreateFromTask(LaunchingTask);
 

@@ -48,5 +48,6 @@ namespace TechAppLauncher.Models
         public bool Attachments { get; set; }
         public string GUID { get; set; }
         public string InstallerUrl { get; set; }
+        public List<string> Galleries { get; set; }
     }
 }
