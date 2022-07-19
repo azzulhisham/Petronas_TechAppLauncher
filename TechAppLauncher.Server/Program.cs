@@ -6,13 +6,19 @@ var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 var data = new
 {
-    AppId = 184,
-    AppType = "DSG",
-    AppUID = "ENTDDSG2021",
-    Title = "ENTD DSG",
-    ShortDescription = "Enhanced Network Turtoisity Detection for DSG",
-    AppVersion = 1.1,
-    InstallerUrl = "/file",
+    AppId = 157,
+    AppType = "Plugin",
+    PluginApp = "Petrel2019",
+    AppUID = "NTD2020",
+    Title = "GeoSenz NTD PETREL 2019",
+    ShortDescription = "Tool that delineates the fracture connectivity in the seismic data",
+    AppVersion = 1.0,
+    InstallerUrl = "https://techupstream.petronas.com/tastore/AppVault/TechApps_NTD_Petrel_2019_20200903.zip",
+    AppLogoUrl = new { Url = "https://techupstream.petronas.com/tastore/AppImage/NTD-logo.png" },
+    Galleries = new string[] {
+        "https://techupstream.petronas.com/tastore/AppImage/NTD-setting.PNG",
+        "https://techupstream.petronas.com/tastore/AppImage/NTD-petrel.PNG"
+    },
 };
 var text = System.Text.Json.JsonSerializer.Serialize(data);
 
