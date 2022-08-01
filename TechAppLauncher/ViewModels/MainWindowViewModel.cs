@@ -64,6 +64,7 @@ namespace TechAppLauncher.ViewModels
         private string _selectedAppVersion;
         private string _selectedAppDescription;
         private string _selectedAppRefFile = "";
+        private string _selectedAppRefId = "";
 
         private string _installFromFile;
         private string _downloadAppPath;
@@ -316,7 +317,12 @@ namespace TechAppLauncher.ViewModels
 
             if (_selectedAppType.ToLower() == "stand alone")
             {
-                await LaunchAgent();
+                if (string.IsNullOrEmpty(_selectedAppRefId))
+                {
+                    var appDistRefDet = await _techAppStoreService.GetAppDistributionReferenceDetailByAppUID(_selectedAppUID);
+                    _selectedAppRefId = appDistRefDet?.LinkID ?? "";
+                }
+                await LaunchAgent(_selectedAppRefId);
             }
 
             LoadXmlContent();
@@ -343,6 +349,7 @@ namespace TechAppLauncher.ViewModels
                 SelectedAppVersion = result.AppVersion?.ToString() ?? "";
                 SelectedAppDescription = result.ShortDescription;
                 SelectedAppRefFile = result.InstallerUrl;
+                _selectedAppRefId = result.ReferenceId ?? "";
                 IsDownloadAble = _selectedAppType.ToLower() is "plugin" or "dsg";
                 IsLaunchAble = true;
 
@@ -394,6 +401,7 @@ namespace TechAppLauncher.ViewModels
         {
             var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
             //AppTitleBar = $"Tech App Store - Ver. : {assemblyVersion.Major}.{assemblyVersion.MajorRevision}.{assemblyVersion.Build}.{assemblyVersion.Revision}";
+            LoadFromArgs(@"C:\Users\anton\Downloads\GeoSeisMod2019.techapp");
             if (args is { Length: > 0 })
             {
                 AppTitleBar = $"Parse Args: {args[0]}";
@@ -467,7 +475,7 @@ namespace TechAppLauncher.ViewModels
 
 
             //download the file
-            string zipFilePath = Path.Combine(targetPath, this._refFileInfo.FileName);
+            string zipFilePath = Path.Combine(targetPath, _refFileInfo?.FileName ?? "");
             string workingFolder = zipFilePath.Replace(".zip", "");
 
             //ensure existing file is remove
@@ -541,17 +549,16 @@ namespace TechAppLauncher.ViewModels
             this.IsBusy = false;
         }
 
-        public async Task LaunchAgent(string filePath = "")
+
+        const string AGENT_APP = @"C:\Windows\CCM\ClientUX\scclient.exe";
+        public async Task LaunchAgent(string id, string agentName = "softwarecenter")
         {
             this.IsLaunchAble = false;
-
-            var appDistRefDet =  await _techAppStoreService.GetAppDistributionReferenceDetailByAppUID(_selectedAppUID);
             string messageBoxText = "";
 
-            if (appDistRefDet != null)
+            if (File.Exists(AGENT_APP) && !string.IsNullOrEmpty(id))
             {
-                string agentApp = @"C:\Windows\CCM\ClientUX\scclient.exe";
-                string processCmd = $"\"{agentApp}\" \"softwarecenter:SoftwareID={appDistRefDet.LinkID}\"";
+                string processCmd = $"\"{AGENT_APP}\" \"softwarecenter:SoftwareID={id}\"";
 
                 try
                 {
@@ -562,8 +569,8 @@ namespace TechAppLauncher.ViewModels
                     await Task.Run(() => Sleep(5));
 
                     //success
-                    SelectedAppRefFile = this._refFileInfo.FileName + $" - installed {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}";
-                    messageBoxText = $"Success! \r\nInstallation by {appDistRefDet.AgentName}";
+                    SelectedAppRefFile = $"{_refFileInfo?.FileName} - installed {DateTime.Now:yyyy-MM-dd HH:mm:ss}";
+                    messageBoxText = $"Success! \r\nInstallation by {agentName}";
 
                     var rec = _techAppStoreService.AddUserDownloadSession(new UserDownloadSession()
                     {
@@ -571,7 +578,7 @@ namespace TechAppLauncher.ViewModels
                         AppUID = SelectedAppUID,
                         Title = SelectedAppTitle,
                         UserName = Environment.UserName,
-                        Status = $"Installation by {appDistRefDet.AgentName}",
+                        Status = $"Installation by {agentName}",
                         Remark = SelectedAppType,
                         InstallTimeStamp = DateTime.Now
                     });

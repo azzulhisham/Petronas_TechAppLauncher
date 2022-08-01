@@ -1,6 +1,7 @@
 using System.IO;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
@@ -20,16 +21,31 @@ var data = new
         "https://techupstream.petronas.com/tastore/AppImage/NTD-petrel.PNG"
     },
 };
-var text = System.Text.Json.JsonSerializer.Serialize(data);
 
-app.MapGet("/", () =>
+var geo = new 
 {
-    return Results.Content($"<pre>{text}</pre><a href='/install'>Install</a>", "text/html");
-});
+    AppId = 137,
+    AppType = "Stand Alone",
+    ReferenceId = "ScopeId_03A3D380-BC8F-4E85-8A80-23F2A423C8CF/Application_ceab5835-5987-46d1-a80d-fd5b6fe5f4f3",
+    AppUID = "GeoSeisMod2019",
+    Title = "GeoSeisMod",
+    ShortDescription = "Geological Seismic Forward Modeling",
+    AppVersion = 1.0,
+    AppLogoUrl = new { Url = "https://techupstream.petronas.com/tastore/AppImage/geoseismod-logo.png" },
+    Galleries = new string[] {
+        "https://techupstream.petronas.com/tastore/AppImage/geoseismod-app.png",
+    },
+};
 
-app.MapGet("/install", () =>
-{
-    return Results.File(Encoding.ASCII.GetBytes(text), "application/techapp", $"{data.AppUID}.techapp");
-});
+var text = JsonSerializer.Serialize(data);
+var geoText = JsonSerializer.Serialize(geo);
+
+app.MapGet("/", () => Results.Content(
+    $"<pre>{text}</pre><a href='/plugin'>{data.Title}</a><br><pre>{geoText}</pre><a href='/standalone'>{geo.Title}</a>", "text/html"));
+
+app.MapGet("/plugin", () => Results.File(Encoding.ASCII.GetBytes(text), "application/techapp", $"{data.AppUID}.techapp"));
+app.MapGet("/standalone", () => Results.File(Encoding.ASCII.GetBytes(geoText), "application/techapp", $"{geo.AppUID}.techapp"));
 
 app.Run();
+
+
