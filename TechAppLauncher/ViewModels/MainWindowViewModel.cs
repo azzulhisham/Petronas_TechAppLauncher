@@ -401,7 +401,7 @@ namespace TechAppLauncher.ViewModels
         {
             var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
             //AppTitleBar = $"Tech App Store - Ver. : {assemblyVersion.Major}.{assemblyVersion.MajorRevision}.{assemblyVersion.Build}.{assemblyVersion.Revision}";
-            LoadFromArgs(@"C:\Users\anton\Downloads\GeoSeisMod2019.techapp");
+            //LoadFromArgs(@"C:\Users\anton\Downloads\GeoSeisMod2019.techapp");
             if (args is { Length: > 0 })
             {
                 AppTitleBar = $"Parse Args: {args[0]}";
